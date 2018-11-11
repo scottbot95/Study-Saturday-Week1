@@ -3,6 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 
+const router = require('./routes');
+
 // Init App
 const app = express();
 
@@ -10,6 +12,19 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// routing middleware
+app.use(router);
+
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).send('The page you requested does not exist');
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  res.status(500).json(err);
+});
 
 // Listen on server
 
