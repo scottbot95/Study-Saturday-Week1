@@ -4,7 +4,7 @@ const students = [{id:1, name:'Dan'}, {id:2, name:'Karen'}, {id:3, name:'George'
 let nextId = 5;
 
 
-const getStudentById = (id) => students.find(s => s.id === Number(id))
+const getStudentById = (id) => students.find(s => s.id === Number(id));
 
 const getStudentIndexById = (id) => students.findIndex(s => s.id === Number(id));
 
