@@ -1,45 +1,51 @@
 const router = require('express').Router();
 
-const students = [{id:1, name:'Dan'}, {id:2, name:'Karen'}, {id:3, name:'George'}, {id:4, name:'Janice'}];
-let nextId = 5;
+const { Student } = require('../models');
 
 
-const getStudentById = (id) => students.find(s => s.id === Number(id));
-
-const getStudentIndexById = (id) => students.findIndex(s => s.id === Number(id));
-
-
-router.get('/', (req, res, next) => {
-  res.json(students);
+router.get('/', async (req, res, next) => {
+  res.json(await Student.findAll());
 });
 
-router.get('/:id', (req, res, next) => {
-  const student = getStudentById(req.params.id);
-  if (student !== undefined) {
-    res.json(student);
-  } else {
-    next();
+router.get('/:id', async (req, res, next) => {
+  try {
+    const test = await Student.findById(req.params.id);
+    if (test !== null) {
+      res.json(test);
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
-router.post('/', (req, res, next) => {
-  const student = req.body;
-  student.id = nextId++;
-  students.push(student);
-  res.status(201).json({success:true, student});
+router.post('/', async (req, res, next) => {
+  try {
+    const created = await Student.create(req.body);
+    if (created !== null) {
+      res.status(201).json(created);
+    } else {
+      next({success: false, error: 'Failed to create test'});
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
   const idx = getStudentIndexById(req.params.id);
   if (idx !== -1) {
-    students[idx].name = req.body.name;
+    const {id, ...student} = req.body;
+    student.id = req.params.id;
+    students[idx] = student;
     res.json(students[idx]);
   } else {
     res.status(400).json({success:false, error: 'No student with id:' + req.params.id});
   }
 });
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   const idx = getStudentIndexById(req.params.id);
   if (idx !== -1) {
     students.splice(idx, 1);

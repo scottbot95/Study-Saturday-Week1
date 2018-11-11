@@ -1,7 +1,6 @@
 const router = require('express').Router();
 
-const tests = [{id:1, name:'Dan'}, {id:2, name:'Karen'}, {id:3, name:'George'}, {id:4, name:'Janice'}];
-let nextId = 5;
+const { Test } = require('../models');
 
 
 const getTestById = (id) => tests.find(s => s.id === Number(id));
@@ -9,44 +8,69 @@ const getTestById = (id) => tests.find(s => s.id === Number(id));
 const getTestIndexById = (id) => tests.findIndex(s => s.id === Number(id));
 
 
-router.get('/', (req, res, next) => {
-  res.json(tests);
-});
-
-router.get('/:id', (req, res, next) => {
-  const test = getTestById(req.params.id);
-  if (test !== undefined) {
-    res.json(test);
-  } else {
-    next();
+router.get('/', async (req, res, next) => {
+  try {
+    const tests = await Test.findAll();
+    res.json(tests);
+  } catch (err) {
+    next(err);
   }
 });
 
-router.post('/', (req, res, next) => {
-  const test = req.body;
-  test.id = nextId++;
-  tests.push(test);
-  res.status(201).json({success:true, test});
-});
-
-router.put('/:id', (req, res, next) => {
-  const idx = getTestIndexById(req.params.id);
-  if (idx !== -1) {
-    tests[idx].name = req.body.name;
-    res.json(tests[idx]);
-  } else {
-    res.status(400).json({success:false, error: 'No test with id:' + req.params.id});
+router.get('/:id', async (req, res, next) => {
+  try {
+    const test = await Test.findById(req.params.id);
+    if (test !== null) {
+      res.json(test);
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
-router.delete('/:id', (req, res, next) => {
-  const idx = getTestIndexById(req.params.id);
-  if (idx !== -1) {
-    tests.splice(idx, 1);
-    res.status(204);
-    res.end();
-  } else {
-    res.status(400).json({success:false, error: 'No test with id:' + req.params.id});
+router.post('/', async (req, res, next) => {
+
+  const {id, ...test} = req.body;
+  try {
+    const created = await Test.create(test);
+    if (created !== null) {
+      res.status(201).json(created);
+    } else {
+      next({success: false, error: 'Failed to create test'});
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/:id', async (req, res, next) => {
+  try {
+    const [numChanged, tests] = await Test.update(req.body, {
+      where: {id: req.params.id}
+    });
+    if (numChanged > 0) {
+      res.json(tests);
+    } else {
+      res.status(400).json({success:false, error: 'No test with id:' + req.params.id});
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const numDeleted = await Test.destroy({where:{id:req.params.id}});
+    if (numDeleted > 0) {
+      res.status(204);
+      res.end();
+    } else {
+      res.status(400).json({success:false, error: 'No test with id:' + req.params.id});
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
