@@ -26,7 +26,7 @@ router.post('/', async (req, res, next) => {
     if (created !== null) {
       res.status(201).json(created);
     } else {
-      next({success: false, error: 'Failed to create test'});
+      next({success: false, error: 'Failed to create student'});
     }
   } catch (err) {
     next(err);
@@ -34,25 +34,31 @@ router.post('/', async (req, res, next) => {
 });
 
 router.put('/:id', async (req, res, next) => {
-  const idx = getStudentIndexById(req.params.id);
-  if (idx !== -1) {
-    const {id, ...student} = req.body;
-    student.id = req.params.id;
-    students[idx] = student;
-    res.json(students[idx]);
-  } else {
-    res.status(400).json({success:false, error: 'No student with id:' + req.params.id});
+  try {
+    const [numChanged, tests] = await Student.update(req.body, {
+      where: {id: req.params.id}
+    });
+    if (numChanged > 0) {
+      res.json(tests);
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
 router.delete('/:id', async (req, res, next) => {
-  const idx = getStudentIndexById(req.params.id);
-  if (idx !== -1) {
-    students.splice(idx, 1);
-    res.status(204);
-    res.end();
-  } else {
-    res.status(400).json({success:false, error: 'No student with id:' + req.params.id});
+  try {
+    const numDeleted = await Student.destroy({where:{id: req.params.id}});
+    if (numDeleted > 0) {
+      res.status(204);
+      res.end();
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
