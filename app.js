@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 
 const router = require('./routes');
+const models = require('./models');
 
 // Init App
 const app = express();
@@ -28,6 +29,13 @@ app.use((err, req, res, next) => {
 
 // Listen on server
 
-app.listen(3000, () => {
-  console.log('Server is listening on port 3000!');
-});
+(async () => {
+  const err = await models.init();
+  if (err) {
+    throw err;
+  }
+
+  app.listen(3000, () => {
+    console.log('Server is listening on port 3000!');
+  });
+})();
