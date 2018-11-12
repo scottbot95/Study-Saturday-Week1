@@ -19,7 +19,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const test = await Test.findById(req.params.id);
+    const test = await Test.findByPk(req.params.id);
     if (test !== null) {
       res.json(test);
     } else {

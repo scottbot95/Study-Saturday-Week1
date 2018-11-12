@@ -9,12 +9,49 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const test = await Student.findById(req.params.id);
-    if (test !== null) {
-      res.json(test);
+    const student = await Student.findByPk(req.params.id);
+    if (student !== null) {
+      res.json(student);
     } else {
       next();
     }
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/tests', async (req, res, next) => {
+  try {
+    const student = await Student.findByPk(req.params.id);
+    if (student === null) { return next(); }
+
+    const tests = await student.getTests();
+    res.json(tests);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/mean', async (req, res, next) => {
+  try {
+    const student = await Student.findByPk(req.params.id);
+    if (student === null) { return next(); }
+
+    const tests = await student.getTests();
+    const subjects = {};
+    tests.forEach(test => {
+      subjects[test.subject] = subjects[test.subject] || {sum:0, count:0};
+      let sum = subjects[test.subject].sum || 0;
+      subjects[test.subject].sum = test.score + sum;
+      subjects[test.subject].count++;
+    });
+
+    const means = Object.keys(subjects).reduce((obj, key) => {
+      obj[key] = subjects[key].count !== 0 ? subjects[key].sum / subjects[key].count : 0;
+      return obj;
+    }, {});
+
+    res.json(means);
   } catch (err) {
     next(err);
   }
