@@ -1,10 +1,30 @@
 const router = require('express').Router();
 
-const { Student } = require('../models');
+const { Student, Test } = require('../models');
 
 
 router.get('/', async (req, res, next) => {
   res.json(await Student.findAll());
+});
+
+router.get('/top', async (req, res, next) =>{
+  try {
+    const tests = await Test.findAll({include:[{model:Student}]});
+
+    const topScores = {};
+
+    const top = tests.reduce((obj, test) => {
+      if (topScores[test.subject] === undefined || topScores[test.subject] < test.score) {
+        topScores[test.subject] = test.score;
+        obj[test.subject] = test.student;
+      }
+      return obj;
+    }, {});
+
+    res.json(top);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/:id', async (req, res, next) => {
